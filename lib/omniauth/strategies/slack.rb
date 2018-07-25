@@ -82,13 +82,6 @@ module OmniAuth
       uid { "#{auth['user_id'] || auth['user'].to_h['id']}-#{auth['team_id'] || auth['team'].to_h['id']}" }
 
       info do
-      
-        # # Experimental Threads
-        # threads = []
-        # %w(identity user_info user_profile team_info bot_info).each do |mthd|
-        #   threads << Thread.new {send mthd}
-        # end
-        # threads.each(&:join)
         
         # Experimental Thread Pool
         if options.preload_data_with_threads.to_i > 0
@@ -96,10 +89,10 @@ module OmniAuth
           %w(identity user_info user_profile team_info bot_info).each{|x| work_q.push x }
           workers = (0...(options.preload_data_with_threads.to_i)).map do
             Thread.new do
-              puts "New thread #{Thread.current}"
+              #puts "New thread #{Thread.current}"
               begin
                 while x = work_q.pop(true)
-                  puts "Processing '#{x}' with thread #{Thread.current}"
+                  #puts "Processing '#{x}' with thread #{Thread.current}"
                   send x
                 end
               rescue ThreadError
