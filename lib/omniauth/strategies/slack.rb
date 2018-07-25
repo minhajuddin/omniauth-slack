@@ -19,6 +19,9 @@ module OmniAuth
     # for each authorization. The response of this request may or
     # may not contain email data.
     # 
+    # This may not be true anymore...
+    # Requested scope can now be found during the callback in env['omniauth.strategy']['options']['scope']
+    #
     # Note that the scope requested during the authorization phase is not
     # available to omniauth's callback phase, as this information is not
     # present in the callback url or the token from Slack. Downstream
@@ -82,7 +85,7 @@ module OmniAuth
           name: auth['user'].to_h['name'],
           email: auth['user'].to_h['email'],
           user_id: auth['user_id'] || auth['user'].to_h['id'],
-          team: auth['team_name'] || auth['team'].to_h['name'],
+          team_name: auth['team_name'] || auth['team'].to_h['name'],
           team_id: auth['team_id'] || auth['team'].to_h['id'],
           image: auth['team'].to_h['image_48']
         }
@@ -119,8 +122,8 @@ module OmniAuth
               user_info['user'].to_h['profile'].to_h['email'] ||
               user_profile['profile'].to_h['email']
               ),
-            team:(
-              hash[:team] ||
+            team_name:(
+              hash[:team_name] ||
               team_identity.to_h['name'] ||
               team_info['team'].to_h['name']
               ),
@@ -153,7 +156,7 @@ module OmniAuth
         {
           web_hook_info: web_hook_info,
           #bot_info: bot_info,
-          bot_info: auth['bot'] || bots_info['bot'],
+          bot_info: auth['bot'] || bot_info['bot'],
           auth: auth,
           identity: @identity,
           user_info: @user_info,
@@ -165,7 +168,7 @@ module OmniAuth
             user_info: @user_info_raw,
             user_profile: @user_profile_raw,
             team_info: @team_info_raw,
-            bot_info: @bots_info_raw
+            bot_info: @bot_info_raw
           }
         }
       end
@@ -247,20 +250,14 @@ module OmniAuth
         access_token.params['incoming_webhook']
       end
       
-      def bots_info
+      def bot_info
         return {} unless has_scope?('users:read')
-        @bots_info_raw ||= access_token.get('/api/bots.info')
-        @bots_info ||= @bots_info_raw.parsed
+        @bot_info_raw ||= access_token.get('/api/bots.info')
+        @bot_info ||= @bot_info_raw.parsed
       end
-
-      # Old bot method.
-      # def bot_info
-      #   return {} unless access_token.params.key? 'bot'
-      #   access_token.params['bot']
-      # end
       
       def has_scope?(scope)
-        access_token['scope'].to_s.include?(scope.to_s)
+        access_token['scope'].to_s.split(',').include?(scope.to_s)
       end
     end
   end
