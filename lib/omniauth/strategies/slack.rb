@@ -73,6 +73,8 @@ module OmniAuth
         mode: :query,
         param_name: 'token'
       }
+      
+      option :preload_data_with_threads, 0
 
       # User ID is not guaranteed to be globally unique across all Slack users.
       # The combination of user ID and team ID, on the other hand, is guaranteed
@@ -80,6 +82,34 @@ module OmniAuth
       uid { "#{auth['user_id'] || auth['user'].to_h['id']}-#{auth['team_id'] || auth['team'].to_h['id']}" }
 
       info do
+      
+        # # Experimental Threads
+        # threads = []
+        # %w(identity user_info user_profile team_info bot_info).each do |mthd|
+        #   threads << Thread.new {send mthd}
+        # end
+        # threads.each(&:join)
+        
+        # Experimental Thread Pool
+        if options.preload_data_with_threads.to_i > 0
+          work_q = Queue.new
+          %w(identity user_info user_profile team_info bot_info).each{|x| work_q.push x }
+          workers = (0...(options.preload_data_with_threads.to_i)).map do
+            Thread.new do
+              puts "New thread #{Thread.current}"
+              begin
+                while x = work_q.pop(true)
+                  puts "Processing '#{x}' with thread #{Thread.current}"
+                  send x
+                end
+              rescue ThreadError
+              end
+            end
+          end; "ok"
+          workers.map(&:join); "ok"
+        end
+        
+      
         # Start with only what we can glean from the authorization response.
         hash = { 
           name: auth['user'].to_h['name'],
@@ -90,7 +120,7 @@ module OmniAuth
           image: auth['team'].to_h['image_48']
         }
 
-        # Now add everything else, requiring further calls to the api, if necessary.
+        # Now add everything else, using further calls to the api, if necessary.
         unless skip_info?
           %w(first_name last_name phone skype avatar_hash real_name real_name_normalized).each do |key|
             hash[key.to_sym] = (
