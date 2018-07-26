@@ -6,7 +6,7 @@ module OmniAuth
   module Strategies
   
     # See https://github.com/omniauth/omniauth/wiki/Auth-Hash-Schema for more
-    # info on the auth_hash schema.
+    # info on the auth_hash schema (is this doc still valid?).
     # 
     # Note that Slack does not consider email to be an essential field, and
     # therefore does not guarantee inclusion of email data in either the
@@ -19,24 +19,17 @@ module OmniAuth
     # for each authorization. The response of this request may or
     # may not contain email data.
     # 
-    # This may not be true anymore...
-    # Requested scope can now be found during the callback in env['omniauth.strategy']['options']['scope']
-    #
-    # Note that the scope requested during the authorization phase is not
-    # available to omniauth's callback phase, as this information is not
-    # present in the callback url or the token from Slack. Downstream
-    # processing based on requested scope must be handled in the endpoint app.
-    # Better yet, downstream logic should be based on actual authorized token
-    # scopes, as provided by the Slack authorization response (or any further
-    # Slack api response).
+    # Requested scopes (not the actual token scopes) can be found during
+    # the callback in env['omniauth.strategy']['options']['scope'].
+    # Actual token scopes can be found in the AuthHash object.
     # 
     # Slack is designed to allow quick authorization of users with minimally
     # scoped requests. Deeper scope authorizations are intended to be aquired
     # with further passes thru Slack's authorization process, as the needs of
     # the user and the endpoint app require. This works because Slack scopes
     # are additive - once you successfully authorize a scope, the token will
-    # posses that scope forever, regardless of what flow or scopes are
-    # requested at future authorizations. Removal of scopes requires deletion
+    # possess that scope forever, regardless of what flow or scopes are
+    # requested at future authorizations. Removal of scopes requires revocation
     # of the token.
     # 
     # Other noteable features of this omniauth-slack version.
@@ -52,12 +45,26 @@ module OmniAuth
     # 
     # * In the extra:raw_info section, return as much of each api response as
     #   possible for all api requests made for the current authorization
-    #   request. Possible calls are oauth.access, users.info, team.info,
+    #   cycle. Possible calls are oauth.access, users.info, team.info,
     #   users.identity, users.profile.get, and bots.info. An attempt is made
     #   to use as few api requests as possible.
     #
     # * Allow setting of Slack subdomain at runtime.
     #   See #subdomain definition below.
+    #
+    # * Allow option to preload the above mentioned api responses using
+    #   any number of pooled threads.
+    #
+    #   In the provider setup block:
+    #
+    #     provider :slack,
+    #       key,
+    #       secret,
+    #       :preload_data_with_threads => 3
+    #
+    #   The default (0) skips this feature and behaves as mentioned above.
+    #   Any integer > 0 will use that number of threads to preload the five
+    #   mentioned api responses (as permitted by the token's scopes).
     #
     class Slack < OmniAuth::Strategies::OAuth2
       option :name, 'slack'
