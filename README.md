@@ -33,13 +33,13 @@ While you're in the application settings, add a Redirect URL to your application
 First start by adding this gem to your Gemfile:
 
 ```ruby
-gem 'ginjo-omniauth-slack'
+gem 'ginjo-omniauth-slack', require: 'omniauth-slack'
 ```
 
 Or specify the latest HEAD version from the ginjo repository:
 
 ```ruby
-gem 'ginjo-omniauth-slack', git: 'https://github.com/ginjo/omniauth-slack'
+gem 'ginjo-omniauth-slack', git: 'https://github.com/ginjo/omniauth-slack', require: 'omniauth-slack'
 ```
 
 Next, tell OmniAuth about this provider.
@@ -497,7 +497,7 @@ Create a Sinatra project directory, then add these files.
 
   ```ruby
     source 'https://rubygems.org'
-    gem 'ginjo-omniauth-slack'   #, git:'https://github.com/ginjo/omniauth-slack'
+    gem 'ginjo-omniauth-slack', require: 'omniauth-slack'   #, git:'https://github.com/ginjo/omniauth-slack'
     gem 'sinatra'
     gem 'puma'
   ```
@@ -545,7 +545,7 @@ Create a rails project, then add or modify these files. Note that this is not ne
 #### Gemfile
 
   ```ruby
-    gem 'ginjo-omniauth-slack'   #, git:'https://github.com/ginjo/omniauth-slack'
+    gem 'ginjo-omniauth-slack', require: 'omniauth-slack'   #, git:'https://github.com/ginjo/omniauth-slack'
   ```
 Don't forget to fill in your Slack API credentials. Then start up Rails, and point your browser to
 
